@@ -13,7 +13,7 @@ public class ImageUtils {
     }
 
     public void gaussianBlur(Bitmap bitmap) {
-        nGaussianBlur(bitmap, 16);
+        nGaussianBlur(bitmap, 32);
     }
 
     private native void nGaussianBlur(Bitmap bitmap, int radius);

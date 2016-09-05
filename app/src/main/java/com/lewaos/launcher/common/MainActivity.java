@@ -40,12 +40,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mButton.setOnClickListener(this);
     }
     Bitmap bitmap = null;
+
     @Override
     public void onClick(View v) {
         if (v == mButton) {
             if (bitmap == null) {
-                bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.screen);
-                bitmap = Bitmap.createScaledBitmap(bitmap, 64, 64, true);
+                bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.girl_0);
+                bitmap = Bitmap.createScaledBitmap(bitmap, 128, 128 * bitmap.getHeight() / bitmap.getWidth(), true);
             }
             mGaussianView.setBitmap(bitmap);
         }

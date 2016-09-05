@@ -34,7 +34,7 @@ public class GaussianView extends ImageView {
         invalidate();
     }
 
-    private Paint mPaint = new Paint();
+    private Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
     private Rect sRect = new Rect();
     private Rect dRect = new Rect();
 
