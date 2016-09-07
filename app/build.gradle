@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 android {
     compileSdkVersion 23
-    buildToolsVersion "22.0.1"
+    buildToolsVersion '23.0.3'
 
     defaultConfig {
-        applicationId "com.lewaos.launcher.common"
+        applicationId "com.lewaos.common"
         minSdkVersion 21
         targetSdkVersion 22
         versionCode 1
@@ -13,7 +13,6 @@ android {
         ndk {
             moduleName = 'ImageUtils'
             ldLibs 'm', 'log', 'jnigraphics'
-            abiFilters 'armeabi-v7a', 'x86', 'mips', 'armeabi', 'x86_64'
         }
     }
 

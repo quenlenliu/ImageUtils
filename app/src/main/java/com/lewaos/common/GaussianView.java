@@ -1,4 +1,4 @@
-package com.lewaos.launcher.common;
+package com.lewaos.common;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.widget.ImageView;
 
 /**
@@ -14,7 +15,6 @@ import android.widget.ImageView;
 public class GaussianView extends ImageView {
 
     private Bitmap mBitmap;
-    private ImageUtils mUtils;
     public GaussianView(Context context) {
         super(context);
     }
@@ -49,13 +49,15 @@ public class GaussianView extends ImageView {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (mUtils == null) {
-            mUtils = new ImageUtils();
-        }
         if (mBitmap != null) {
             synchronized (mBitmap) {
-                mUtils.gaussianBlur(mBitmap);
+                long startDrawTime = System.currentTimeMillis();
+                ImageUtils.gaussianBlur(mBitmap);
+                long endDrawTime = System.currentTimeMillis();
                 canvas.drawBitmap(mBitmap, sRect, dRect, mPaint);
+
+                double fps = /*1000f /*/ (endDrawTime - startDrawTime);
+                Log.d("GaussianView", " Draw gaussian blur FPS: " + fps);
             }
         }
     }

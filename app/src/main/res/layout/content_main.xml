@@ -9,10 +9,10 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="com.lewaos.launcher.common.MainActivity"
+    tools:context="com.lewaos.common.MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <com.lewaos.launcher.common.GaussianView
+    <com.lewaos.common.GaussianView
         android:id="@+id/image"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

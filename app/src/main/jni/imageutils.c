@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <malloc.h>
 
+#define DEBUG 1
 #define LOG_TAG "NEL_ImageUtils"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
@@ -109,6 +110,23 @@ static argb* argb_add(argb* a, argb* b)
     return a;
 }
 
+
+static argb* argb_compose(argb* a, argb* b)
+{
+    if (DEBUG)
+    {
+        LOGD("Result alpha: %f, Bitmap alpha: %f\n", a->alpha, b->alpha);
+    }
+    double_t factor = 255.0 - b->alpha;
+    a->alpha = factor * a->alpha + b->alpha;
+    a->red =  factor * a->red + b->red;
+    a->green =  factor * a->green + b->green;
+    a->blue =  factor * a->blue + b->blue;
+    return a;
+}
+
+
+
 static void gaussianBlur(AndroidBitmapInfo* info, void* pixels, uint8_t radius) {
     double_t weights[radius];
     get_weights(radius, weights);
@@ -122,7 +140,12 @@ static void gaussianBlur(AndroidBitmapInfo* info, void* pixels, uint8_t radius) 
 
     argb* result = (argb*) malloc(sizeof(argb));
     argb* temp = (argb*) malloc(sizeof(argb));
-    LOGD("Start ----------------------------- ");
+
+    if(DEBUG)
+    {
+        LOGD("Start ----------------------------- ");
+    }
+
     for (y = 0; y < height; y++) {
         for (x = 0; x < width; x++)
         {
@@ -164,11 +187,14 @@ static void gaussianBlur(AndroidBitmapInfo* info, void* pixels, uint8_t radius) 
                 temp = argb_multi(temp, weights[i]);
                 result = argb_add(result, temp);
             }
-
             set_pixels(info, pixels, x, y, toColor(result));
         }
     }
-    LOGD("End -----------------------------  ");
+
+    if (DEBUG)
+    {
+        LOGD("End -----------------------------  ");
+    }
 
     free(temp);
     free(result);
@@ -179,9 +205,36 @@ static void gaussianBlur(AndroidBitmapInfo* info, void* pixels, uint8_t radius) 
     return;
 }
 
+static void compose_bitmap(AndroidBitmapInfo *result_info, void *result_pixels,
+                           AndroidBitmapInfo *bitmap_info, void *bitmap_pixels)
+{
+    assert(result_info->width == bitmap_info->width);
+    assert(result_info->height == bitmap_info->height);
+    assert(result_info->stride == bitmap_info->stride);
+    uint16_t x, y, width, height;
+    width = result_info->width;
+    height = result_info->height;
+    argb* rp = (argb*) malloc(sizeof(argb));
+    argb* bp = (argb*) malloc(sizeof(argb));
+
+    for (x = 0; x < width; ++x)
+    {
+        for (y = 0; y < height; ++y)
+        {
+            rp = getColorValue(get_pixels(result_info, result_pixels, x, y), rp);
+            bp = getColorValue(get_pixels(bitmap_info, bitmap_pixels, x, y), bp);
+            rp = argb_compose(rp, bp);
+            set_pixels(result_info, result_pixels, x, y, toColor(rp));
+
+        }
+    }
+    free(bp);
+    free(rp);
+}
+
 
 JNIEXPORT void JNICALL
-Java_com_lewaos_launcher_common_ImageUtils_nGaussianBlur(JNIEnv *env, jobject obj, jobject bitmap, jint radius)
+Java_com_lewaos_common_ImageUtils_nGaussianBlur(JNIEnv *env, jclass clazz, jobject bitmap, jint radius)
 {
     AndroidBitmapInfo info;
     void* pixels;
@@ -201,12 +254,64 @@ Java_com_lewaos_launcher_common_ImageUtils_nGaussianBlur(JNIEnv *env, jobject ob
         LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
         return;
     }
-    LOGI("AndroidBitmapInfo: Size:%d x %d, Stride:%d, Format:%d, Flag: %d", info.width, info.height, info.stride, info.format, info.flags);
+
+    if (DEBUG)
+    {
+        LOGD("AndroidBitmapInfo: Size:%d x %d, Stride:%d, Format:%d, Flag: %d", info.width, info.height, info.stride, info.format, info.flags);
+    }
 
     //Do real thing
     gaussianBlur(&info, pixels, radius);
-    //printPixels(&info, pixels);
     if ((ret = AndroidBitmap_unlockPixels(env, bitmap) < 0)){
+        LOGE("AndroidBitmap_unlockPixels() failed ! error=%d", ret);
+    }
+    return;
+}
+
+JNIEXPORT void JNICALL
+Java_com_lewaos_common_ImageUtils_nComposeBitmap(JNIEnv *env, jclass clazz, jobject result, jobject bitmap)
+{
+    AndroidBitmapInfo result_info;
+    AndroidBitmapInfo bitmap_info;
+    void* result_pixels;
+    void* bitmap_pixels;
+    int ret;
+
+    if ((ret = AndroidBitmap_getInfo(env, result, &result_info)) < 0) {
+        LOGE("AndroidBitmap_getInfo() failed ! error = %d", ret);
+        return;
+    }
+
+    if ((ret = AndroidBitmap_getInfo(env, result, &bitmap_info)) < 0) {
+        LOGE("AndroidBitmap_getInfo() failed ! error = %d", ret);
+        return;
+    }
+
+    if (result_info.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+        LOGE("Bitmap format is not RGBA_8888!");
+        return;
+    }
+
+    if (bitmap_info.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+        LOGE("Bitmap format is not RGBA_8888!");
+        return;
+    }
+
+    if ((ret = AndroidBitmap_lockPixels(env, result, &result_pixels)) < 0) {
+        LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
+        return;
+    }
+
+    if ((ret = AndroidBitmap_lockPixels(env, result, &bitmap_pixels)) < 0) {
+        LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
+        return;
+    }
+    LOGI("AndroidBitmapInfo: Size:%d x %d, Stride:%d, Format:%d, Flag: %d", result_info.width, result_info.height, result_info.stride, result_info.format, result_info.flags);
+    compose_bitmap(&result_info, result_pixels, &bitmap_info, bitmap_pixels);
+    if ((ret = AndroidBitmap_unlockPixels(env, bitmap) < 0)){
+        LOGE("AndroidBitmap_unlockPixels() failed ! error=%d", ret);
+    }
+    if ((ret = AndroidBitmap_unlockPixels(env, result) < 0)){
         LOGE("AndroidBitmap_unlockPixels() failed ! error=%d", ret);
     }
     LOGD("Precess End ................ ");

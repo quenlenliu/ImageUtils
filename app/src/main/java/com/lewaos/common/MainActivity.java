@@ -1,6 +1,5 @@
-package com.lewaos.launcher.common;
+package com.lewaos.common;
 
-import android.bluetooth.BluetoothGattServer;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -12,7 +11,9 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
-import android.widget.ImageView;
+
+import com.lewaos.common.R;
+
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -39,16 +40,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mButton = (Button)findViewById(R.id.button);
         mButton.setOnClickListener(this);
     }
-    Bitmap bitmap = null;
+    Bitmap resultBitmap = null;
 
     @Override
     public void onClick(View v) {
         if (v == mButton) {
-            if (bitmap == null) {
-                bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.girl_0);
-                bitmap = Bitmap.createScaledBitmap(bitmap, 128, 128 * bitmap.getHeight() / bitmap.getWidth(), true);
-            }
-            mGaussianView.setBitmap(bitmap);
+            resultBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.girl_0);
+            resultBitmap = Bitmap.createScaledBitmap(resultBitmap, 128, 128 * resultBitmap.getHeight() / resultBitmap.getWidth(), true);
+
+            Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.girl_1);
+            bitmap = Bitmap.createScaledBitmap(bitmap, 128, 128 * resultBitmap.getHeight() / resultBitmap.getWidth(), true);
+
+            ImageUtils.composeBitmap(resultBitmap, bitmap);
+
+            mGaussianView.setImageBitmap(resultBitmap);
         }
     }
 

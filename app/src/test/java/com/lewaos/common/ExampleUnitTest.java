@@ -1,4 +1,4 @@
-package com.lewaos.launcher.common;
+package com.lewaos.common;
 
 import org.junit.Test;
 

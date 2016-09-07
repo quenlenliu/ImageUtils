@@ -1,4 +1,4 @@
-package com.lewaos.launcher.common;
+package com.lewaos.common;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;
